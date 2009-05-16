@@ -111,10 +111,11 @@ class Baseline
         ActiveRecord::Schema.define do
             create_table :ufdetails, :force => true do |table|
                 table.column :artist, :string
+                table.column :year, :string
                 table.column :title, :string
             end
             
-            add_index :ufdetails, [:artist, :title]
+            add_index :ufdetails, [:artist, :year, :title]
         end  
     
     end
@@ -199,10 +200,13 @@ class Baseline
                 # It's possible that this is a VA album
                 if ParseDate::parsedate(name_array[1]) != nil
                     # Set up the standard format with "Various Artists" as the artist tag
-                    name_array[1] = name_array[0]
+                    # Format: "Various Artists" "Year" "Title"
+                    name_array[2] = name_array[0]
                     name_array[0] = "Various Artists"
                 end
             end
+            
+            # All records should be 3 elements at this point
                 
             # Record the information
             
@@ -212,7 +216,8 @@ class Baseline
             
             data_record = Ufdetail.new
             data_record.artist = name_array[0]
-            data_record.title = name_array[name_array.size-1]
+            data_record.year = name_array[1]
+            data_record.title = name_array[2]
             data_record.save
             
             printf("\r Albums found: %d", $album_count)
@@ -248,10 +253,11 @@ class Compare
             create_table :ufcompares, :force => true do |table|
                 table.column :owner, :string
                 table.column :artist, :string
+                table.column :year, :string
                 table.column :title, :string
             end
             
-            add_index :ufcompares, [:owner, :artist, :title]
+            add_index :ufcompares, [:owner, :artist, :year, :title]
         end
         
     end
@@ -312,14 +318,17 @@ class Compare
                     # It's possible that this is a VA album
                     if ParseDate::parsedate(name_array[1]) != nil
                         # Set up the standard format with "Various Artists" as the artist tag
-                        name_array[1] = name_array[0]
+                        # Format: "Various Artists" "Year" "Title"
+                        name_array[2] = name_array[0]
                         name_array[0] = "Various Artists"
                     end
                 end
+                            
+                # All records should be 3 elements at this point
                 
                 # Record the information
                 
-                compare_record = Ufdetail.find_by_artist_and_title(name_array[0], name_array[name_array.length-1])
+                compare_record = Ufdetail.find_by_artist_and_title(name_array[0], name_array[2])
                 
                 if compare_record
                     # We already have this so skip (do not remember)
@@ -329,7 +338,8 @@ class Compare
                     data_record = Ufcompare.new
                     data_record.owner = uber_name
                     data_record.artist = name_array[0]
-                    data_record.title = name_array[name_array.size-1]
+                    data_record.year = name_array[1]
+                    data_record.title = name_array[2]
                     data_record.save
                     
                     printf("\r New Albums found: %d", $album_count)
@@ -349,22 +359,6 @@ class Compare
         puts "\n Processing complete."
         puts format("\n Filelists: %d New Albums: %d", $filelist_count, $album_count)
             
-    end
-    
-    def write_CSV
-       
-        f = File.new("results/uberfind.csv", "w")
-       
-        result_set = Ufcompare.find(:all)
-       
-        result_set.each {|rs|
-       
-            f.puts(rs.owner+","+rs.artist+","+rs.title)       
-       
-        }
-             
-        f.close
-        
     end
     
 end
@@ -391,7 +385,6 @@ else
             new_comparison = Compare.new
             new_comparison.create
             new_comparison.report
-            new_comparison.write_CSV
         when "-X"
             puts "\n Starting creation of a new baseline database...\n\n"
             new_baseline = Baseline.new
@@ -401,7 +394,6 @@ else
             new_comparison = Compare.new
             new_comparison.create
             new_comparison.report
-            new_comparison.write_CSV
         else
             puts "\nCheck the available options!"
             u.message
