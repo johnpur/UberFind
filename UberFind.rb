@@ -37,8 +37,10 @@ out files which are not on the local system, but that we don't want to see on th
 These may be unwanted artists/albums, mispellings, or alternate spellings of already
 acquired albums. The subdirs will have the exception names and will be empty.
 
-v.1.2.0
-12/21/2007
+v.1.3.0
+04/18/2009
+
+version 1.3 - Accounting for the possibility of nested directories in the filelists.
 
 
 =end  
@@ -309,7 +311,24 @@ class Compare
                 tmp_string = tmp_string2.gsub("\"", "")
                 listing_array.push(tmp_string.chomp!)
             end
-
+            
+            # New directory structures allowed (nesting).
+            # Allow for 1-3 tabs before the album listing
+            # version 1.3
+            
+            if line[0,18] == "\t\t<Directory Name="
+                tmp_string = line.gsub("\t\t<Directory Name=", "")
+                tmp_string2 = tmp_string.gsub("\">", "")
+                tmp_string = tmp_string2.gsub("\"", "")
+                listing_array.push(tmp_string.chomp!)
+            end
+            
+            if line[0,19] == "\t\t\t<Directory Name="
+                tmp_string = line.gsub("\t\t\t<Directory Name=", "")
+                tmp_string2 = tmp_string.gsub("\">", "")
+                tmp_string = tmp_string2.gsub("\"", "")
+                listing_array.push(tmp_string.chomp!)
+            end
         }
         
         listing_array.each {|album_info|
