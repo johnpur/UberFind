@@ -14,8 +14,7 @@ options:
   
   -X (execute) : runs a baseline and compare in order.
                  
-The output will be in a file called 'uberfind.csv' in the 'results' directory. Also,
-the results will be in a table called 'ufcompares' in the 'uberfind' database. Use
+The output will be in a table called 'ufcompares' in the 'uberfind' database. Use
 the following SQL to sort:
 
   SELECT * FROM 'uberfind', 'ufcompares' ORDER BY 'artist', 'title'
@@ -38,8 +37,8 @@ out files which are not on the local system, but that we don't want to see on th
 These may be unwanted artists/albums, mispellings, or alternate spellings of already
 acquired albums. The subdirs will have the exception names and will be empty.
 
-v.1.0.0
-12/29/2006
+v.1.2.0
+12/21/2007
 
 
 =end  
@@ -91,7 +90,7 @@ class UsageCheck
     def message
         puts "\nUberFind - Ubernet Find Non-downloaded Files"
         puts "\n\noptions: -B : Set the baseline local database (do this first)"
-        puts "         -C : Creates the list of non-downloaded files in results/uberfind.csv"
+        puts "         -C : Creates the list of non-downloaded files in 'ufcompares' in the 'uberfind' database"
         puts "         -X : Runs a baseline and then a compare in order\n"
     end
     
@@ -115,7 +114,9 @@ class Baseline
                 table.column :title, :string
             end
             
-            add_index :ufdetails, [:artist, :year, :title]
+            add_index :ufdetails, [:artist]
+            add_index :ufdetails, [:year]
+            add_index :ufdetails, [:title]
         end  
     
     end
@@ -151,8 +152,8 @@ class Baseline
         
         # Add the files in the downloaded and temp directories
         
-        directory_array.push("F:/- Downloading -/Uber/MP3")
-        directory_array.push("F:/- Downloading -/Uber/Temp")
+        directory_array.push("D:/- Downloading -/Uber/MP3")
+        directory_array.push("D:/- Downloading -/Uber/Temp")
         
         # Add in the exception directories
         
@@ -257,7 +258,10 @@ class Compare
                 table.column :title, :string
             end
             
-            add_index :ufcompares, [:owner, :artist, :year, :title]
+            add_index :ufcompares, [:owner]
+            add_index :ufcompares, [:artist]
+            add_index :ufcompares, [:year]
+            add_index :ufcompares, [:title]
         end
         
     end
@@ -305,6 +309,7 @@ class Compare
                 tmp_string = tmp_string2.gsub("\"", "")
                 listing_array.push(tmp_string.chomp!)
             end
+
         }
         
         listing_array.each {|album_info|
